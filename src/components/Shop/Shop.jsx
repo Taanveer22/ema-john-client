@@ -11,6 +11,8 @@ const Shop = () => {
   const loadedProducts = useLoaderData();
   // console.log(loadedProducts);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(0);
+
   const numberOfPages = Math.ceil(loadedProducts?.count / itemsPerPage);
 
   const pages = [];
@@ -23,8 +25,21 @@ const Shop = () => {
 
   const handleItemsPerPageChange = (e) => {
     // console.log(e.target.value);
-    const val = parseInt(e.target.value);
-    setItemsPerPage(val);
+    const eventValue = parseInt(e.target.value);
+    setItemsPerPage(eventValue);
+    setCurrentPage(0);
+  };
+
+  const handlePrevBtn = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextBtn = () => {
+    if (currentPage < pages.length - 1) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   useEffect(() => {
@@ -59,13 +74,13 @@ const Shop = () => {
     // const newCart = [...cart, product];
     // if product doesn't exist in the cart, then set quantity = 1
     // if exist update quantity by 1
-    const exists = cart.find((pd) => pd._id === product._id);
+    const exists = cart.find((productItem) => productItem._id === product._id);
     if (!exists) {
       product.quantity = 1;
       newCart = [...cart, product];
     } else {
       exists.quantity = exists.quantity + 1;
-      const remaining = cart.filter((pd) => pd._id !== product._id);
+      const remaining = cart.filter((productItem) => productItem._id !== product._id);
       newCart = [...remaining, exists];
     }
 
@@ -100,10 +115,18 @@ const Shop = () => {
         </div>
       </div>
       {/* pagination */}
+      <p>current page : {currentPage}</p>
       <div className="pagination-container">
-        <div className="pagination">
+        <button onClick={handlePrevBtn}>Prev</button>
+        <div className="buttons">
           {pages.map((page) => (
-            <button key={page}>{page}</button>
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className={page === currentPage && 'selected'}
+            >
+              {page}
+            </button>
           ))}
         </div>
         <div className="items">
@@ -113,6 +136,7 @@ const Shop = () => {
             <option value={50}>50</option>
           </select>
         </div>
+        <button onClick={handleNextBtn}>Next</button>
       </div>
     </>
   );

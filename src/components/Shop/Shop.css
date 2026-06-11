@@ -34,11 +34,15 @@
   margin-bottom: 60px;
 }
 
-.pagination {
+.buttons {
   display: flex;
   gap: 10px;
 }
 
 .items {
-  border: 2px solid blue;
+  border: 2px solid rgb(0, 191, 255);
+}
+
+.selected {
+  background-color: rgb(11, 169, 11);
 }
