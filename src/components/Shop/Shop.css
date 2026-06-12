@@ -46,3 +46,9 @@
 .selected {
   background-color: rgb(11, 169, 11);
 }
+
+.title {
+  background-color: orange;
+  text-align: center;
+  font-size: larger;
+}

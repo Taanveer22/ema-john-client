@@ -21,7 +21,7 @@ const Shop = () => {
     pages.push(i);
   }
   // const pages = [...Array(numberOfPages).keys()];
-  console.log(pages);
+  // console.log(pages);
 
   const handleItemsPerPageChange = (e) => {
     // console.log(e.target.value);
@@ -115,7 +115,7 @@ const Shop = () => {
         </div>
       </div>
       {/* pagination */}
-      <p>current page : {currentPage}</p>
+      <p className="title">current page : {currentPage}</p>
       <div className="pagination-container">
         <button onClick={handlePrevBtn}>Prev</button>
         <div className="buttons">
@@ -123,7 +123,7 @@ const Shop = () => {
             <button
               key={page}
               onClick={() => setCurrentPage(page)}
-              className={page === currentPage && 'selected'}
+              className={page === currentPage ? 'selected' : undefined}
             >
               {page}
             </button>
