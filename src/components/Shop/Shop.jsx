@@ -1,27 +1,84 @@
 import { useEffect, useState } from 'react';
 import { Link, useLoaderData } from 'react-router-dom';
-import { addToDb, deleteShoppingCart, getShoppingCart } from '../../utilities/fakedb';
+import { addToDb, deleteShoppingCart } from '../../utilities/fakedb';
+import baseURL from '../api/baseUrl';
 import Cart from '../Cart/Cart';
 import Product from '../Product/Product';
 import './Shop.css';
 
 const Shop = () => {
+  // =========================
+  // STATE
+  // =========================
+  const loadedCart = useLoaderData();
+  // console.log(loadedCart);
+  const [cartData, setCartData] = useState(loadedCart ?? []);
   const [products, setProducts] = useState([]);
-  const [cart, setCart] = useState([]);
-  const loadedProducts = useLoaderData();
-  // console.log(loadedProducts);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(0);
+  const [countProducts, setCountProducts] = useState(0);
 
-  const numberOfPages = Math.ceil(loadedProducts?.count / itemsPerPage);
+  // =========================
+  // PAGINATION LOGIC
+  // =========================
+  const numberOfPages = Math.ceil(countProducts / itemsPerPage);
 
-  const pages = [];
-  for (let i = 0; i < numberOfPages; i++) {
-    // console.log(i);
-    pages.push(i);
-  }
-  // const pages = [...Array(numberOfPages).keys()];
+  // Create page numbers dynamically
+  const pages = [...Array(numberOfPages).keys()];
   // console.log(pages);
+  // const pages = [];
+  // for (let i = 0; i < numberOfPages; i++) {
+  //   // console.log(i);
+  //   pages.push(i);
+  // }
+
+  // =========================
+  // FETCH PRODUCTS (pagination)
+  // =========================
+  useEffect(() => {
+    fetch(`${baseURL}/products?page=${currentPage}&size=${itemsPerPage}`)
+      .then((res) => res.json())
+      .then((data) => setProducts(data));
+  }, [currentPage, itemsPerPage]);
+
+  // =========================
+  // FETCH TOTAL PRODUCT COUNT
+  // =========================
+  useEffect(() => {
+    fetch(`${baseURL}/productsCount`)
+      .then((res) => res.json())
+      .then((data) => setCountProducts(data.countProducts));
+  }, []);
+
+  // =========================
+  // ADD TO CART (FIXED - NO STALE STATE BUG)
+  // =========================
+  const handleAddToCart = (product) => {
+    setCartData((prevCart) => {
+      const existingProduct = prevCart.find((item) => item._id === product._id);
+
+      if (!existingProduct) {
+        return [...prevCart, { ...product, quantity: 1 }];
+      } else {
+        return prevCart.map((item) =>
+          item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+    });
+    addToDb(product._id);
+  };
+
+  // =========================
+  // CLEAR CART
+  // =========================
+  const handleClearCart = () => {
+    setCartData([]);
+    deleteShoppingCart();
+  };
+
+  // =========================
+  // PAGINATION HANDLERS (SAFE)
+  // =========================
 
   const handleItemsPerPageChange = (e) => {
     // console.log(e.target.value);
@@ -41,58 +98,6 @@ const Shop = () => {
       setCurrentPage(currentPage + 1);
     }
   };
-
-  useEffect(() => {
-    fetch(`http://localhost:5000/products?page=${currentPage}&size=${itemsPerPage}`)
-      .then((res) => res.json())
-      .then((data) => setProducts(data));
-  }, [currentPage, itemsPerPage]);
-
-  useEffect(() => {
-    const storedCart = getShoppingCart();
-    const savedCart = [];
-    // step 1: get id of the addedProduct
-    for (const id in storedCart) {
-      // step 2: get product from products state by using id
-      const addedProduct = products.find((product) => product._id === id);
-      if (addedProduct) {
-        // step 3: add quantity
-        const quantity = storedCart[id];
-        addedProduct.quantity = quantity;
-        // step 4: add the added product to the saved cart
-        savedCart.push(addedProduct);
-      }
-      // console.log('added Product', addedProduct)
-    }
-    // step 5: set the cart
-    setCart(savedCart);
-  }, [products]);
-
-  const handleAddToCart = (product) => {
-    // cart.push(product); '
-    let newCart = [];
-    // const newCart = [...cart, product];
-    // if product doesn't exist in the cart, then set quantity = 1
-    // if exist update quantity by 1
-    const exists = cart.find((productItem) => productItem._id === product._id);
-    if (!exists) {
-      product.quantity = 1;
-      newCart = [...cart, product];
-    } else {
-      exists.quantity = exists.quantity + 1;
-      const remaining = cart.filter((productItem) => productItem._id !== product._id);
-      newCart = [...remaining, exists];
-    }
-
-    setCart(newCart);
-    addToDb(product._id);
-  };
-
-  const handleClearCart = () => {
-    setCart([]);
-    deleteShoppingCart();
-  };
-
   return (
     <>
       {/* shop */}
@@ -107,7 +112,7 @@ const Shop = () => {
           ))}
         </div>
         <div className="cart-container">
-          <Cart cart={cart} handleClearCart={handleClearCart}>
+          <Cart cartData={cartData} handleClearCart={handleClearCart}>
             <Link className="proceed-link" to="/orders">
               <button className="btn-proceed">Review Order</button>
             </Link>
@@ -115,7 +120,6 @@ const Shop = () => {
         </div>
       </div>
       {/* pagination */}
-      <p className="title">current page : {currentPage}</p>
       <div className="pagination-container">
         <button onClick={handlePrevBtn}>Prev</button>
         <div className="buttons">

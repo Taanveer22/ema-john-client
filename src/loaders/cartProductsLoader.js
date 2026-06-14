@@ -1,13 +1,24 @@
+import baseURL from '../components/api/baseUrl';
 import { getShoppingCart } from '../utilities/fakedb';
 
 const cartProductsLoader = async () => {
-  // if cart data is in database, you have to use async await
+  // 1. Get cart from localStorage
+  // storedCart = { productId: quantity }
   const storedCart = getShoppingCart();
-  console.log(storedCart);
-  const storedCartIdList = Object.keys(storedCart);
-  console.log(storedCartIdList);
 
-  const loadedProducts = await fetch('http://localhost:5000/productsById', {
+  // 2. Convert object keys into array of IDs
+  // Example: {a:1, b:2} → ["a", "b"]
+  const storedCartIdList = Object.keys(storedCart);
+
+  console.log('storedCart:', storedCart);
+  console.log('storedCartIdList:', storedCartIdList);
+  // 3. If cart is empty, return empty array
+  if (storedCartIdList.length === 0) {
+    return [];
+  }
+
+  // 4. Send IDs to backend to get full product info
+  const loadedProducts = await fetch(`${baseURL}/productsById`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -17,22 +28,28 @@ const cartProductsLoader = async () => {
   const productsData = await loadedProducts.json();
   console.log(productsData);
 
+  // 5. FINAL CART
   const savedCart = [];
 
+  // loop through storedCart object (id → quantity)
   for (const id in storedCart) {
+    // find full product details from backend data
     const addedProduct = productsData.find((product) => product._id === id);
+
+    // if product exists in backend response
     if (addedProduct) {
+      // get quantity from localStorage
       const quantity = storedCart[id];
+
+      // attach quantity to product
       addedProduct.quantity = quantity;
+
+      // push into final cart array
       savedCart.push(addedProduct);
     }
   }
 
-  // if you need to send two things
-  // return [productsData, savedCart]
-  // another options
-  // return { productsData, cart: savedCart }
-
+  // 6. return final cart to Shop component
   return savedCart;
 };
 
