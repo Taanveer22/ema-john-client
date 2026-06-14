@@ -10,8 +10,8 @@ const cartProductsLoader = async () => {
   // Example: {a:1, b:2} → ["a", "b"]
   const storedCartIdList = Object.keys(storedCart);
 
-  console.log('storedCart:', storedCart);
-  console.log('storedCartIdList:', storedCartIdList);
+  // console.log('storedCart:', storedCart);
+  // console.log('storedCartIdList:', storedCartIdList);
   // 3. If cart is empty, return empty array
   if (storedCartIdList.length === 0) {
     return [];
@@ -26,7 +26,7 @@ const cartProductsLoader = async () => {
     body: JSON.stringify(storedCartIdList),
   });
   const productsData = await loadedProducts.json();
-  console.log(productsData);
+  // console.log(productsData);
 
   // 5. FINAL CART
   const savedCart = [];
